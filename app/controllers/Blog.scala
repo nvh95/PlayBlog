@@ -29,7 +29,13 @@ object Blog extends Controller {
     )
   )
 
-
+  val commentForm: Form[(String, String)] = Form(
+    tuple(
+      "text" -> nonEmptyText,
+      "username" -> nonEmptyText
+    )
+  )
+  
   /**
    * Display an empty form.
    */
@@ -37,11 +43,28 @@ object Blog extends Controller {
     Ok(html.blog.newEntry(entryForm));
   }
 
-  def show(id:Long, title:String) = Action {
+  def show(id:Long, title:String) = Action { implicit request =>
     BlogEntry.findById(id).map { entry =>
-      Ok(html.blog.show(entry))
+      Ok(html.blog.show(entry, commentForm, CommentEntry.all))
     }.getOrElse(NotFound)
   }
+  
+  def addComment(id:Long, title:String) = Action { implicit request =>
+    
+    BlogEntry.findById(id).map { entry =>
+	    commentForm.bindFromRequest.fold(
+	      commentForm_errors => BadRequest(html.blog.show(entry, commentForm_errors, CommentEntry.all)),
+	      {
+	        case (text, username) =>
+	          val date = new Date()
+	          val comment_entry =  CommentEntry.create(
+	            CommentEntry(NotAssigned, text, username, date)
+	          )
+	          Ok(html.blog.show(entry, commentForm, CommentEntry.all))
+	      }
+	    )
+    }.getOrElse(NotFound)
+  }  
 
   def create = Action { implicit request =>
     entryForm.bindFromRequest.fold(
@@ -52,7 +75,7 @@ object Blog extends Controller {
           val entry =  BlogEntry.create(
             BlogEntry(NotAssigned, title, content, date)
           )
-          Ok(html.blog.show(entry))
+          Ok(html.blog.show(entry, commentForm, CommentEntry.all))
         }
     )
   }
