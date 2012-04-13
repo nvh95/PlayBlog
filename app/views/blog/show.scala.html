@@ -9,3 +9,10 @@
 @main(title, nav = "blog") {
     @parseMarkdown(entry.content)
 }
+    <div class="actions">
+        <a href="@routes.Blog.edit(entry.id.get)" class="btn">Edit entry</a>
+    </div>
+    
+
+
+

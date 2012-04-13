@@ -56,4 +56,19 @@ object BlogEntry {
 
     }
   }
+
+  def update(entry:BlogEntry):BlogEntry = {
+
+    DB.withConnection { implicit connection =>
+
+      SQL("update entry set title={title}, content={content}, date={date} where id = {id}").on(
+        'title -> entry.title,
+        'content -> entry.content,
+        'date -> entry.date,
+        'id -> entry.id
+      ).executeUpdate()
+     entry
+    }
+  }
+
 }

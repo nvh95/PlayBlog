@@ -4,13 +4,12 @@ import play.api._
 import play.api.mvc._
 import play.api.data._
 import play.api.data.Forms._
-import play.api.data.validation.Constraints._
 
 import views._
 
 import models._
 import java.util.Date
-import anorm.NotAssigned
+import anorm.{Id, NotAssigned}
 
 /**
  * Author: mange
@@ -41,6 +40,27 @@ object Blog extends Controller {
     BlogEntry.findById(id).map { entry =>
       Ok(html.blog.show(entry))
     }.getOrElse(NotFound)
+  }
+
+  def edit(id:Long) = Action {
+    BlogEntry.findById(id).map { entry =>
+      Ok(html.blog.edit(entry,entryForm.fill(entry.title,entry.content)))
+    }.getOrElse(NotFound)
+  }
+
+  def update(id:Long) = Action {
+    implicit request =>
+      entryForm.bindFromRequest.fold(
+        errors => BadRequest(html.blog.newEntry(errors)),
+        {
+          case (title, content) =>
+            val date = new Date()
+            val entry = BlogEntry.update(
+              BlogEntry(Id(id), title, content, date)
+              )
+            Ok(html.blog.show(entry))
+        }
+        )
   }
 
   def create = Action { implicit request =>
